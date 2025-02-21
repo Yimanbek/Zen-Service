@@ -86,12 +86,24 @@ WSGI_APPLICATION = 'django_zen.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': config(
-        'DATABASE_URL',
-        cast=db_url
-    )
-}
+DATABASE_URL = os.getenv("DATABASE_URL", config("DATABASE_URL", default=""))
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", config("TEST_DATABASE_URL", default=""))
+
+if os.getenv("GITHUB_ACTIONS"):  
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "test_db",
+            "USER": "test_user",
+            "PASSWORD": "test_password",
+            "HOST": "localhost",
+            "PORT": "5432",
+        }
+    }
+else:
+    DATABASES = {
+        "default": config("DATABASE_URL", cast=db_url)
+    }
 
 if os.getenv("PYTEST_RUNNING"):
     DATABASES["default"] = config("TEST_DATABASE_URL", cast=db_url)
