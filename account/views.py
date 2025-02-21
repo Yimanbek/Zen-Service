@@ -16,7 +16,6 @@ import requests
 
 
 User = get_user_model()
-TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN')
 
 
 class GetUrlActivate(generics.GenericAPIView):
