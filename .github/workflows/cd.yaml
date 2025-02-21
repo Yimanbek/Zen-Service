@@ -28,6 +28,15 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/myapp:latest -f docker/dockerfile.prod .
           docker push ${{ secrets.DOCKER_USERNAME }}/myapp:latest
 
+      - name: Копирование файлов на сервер
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "."
+          target: "/home/myapp"
+
       - name: Деплой на сервер
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -35,6 +44,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            cd /home/myapp
             docker-compose -f docker-compose.prod.yaml down
             docker-compose -f docker-compose.prod.yaml pull
             docker-compose -f docker-compose.prod.yaml up --build -d
