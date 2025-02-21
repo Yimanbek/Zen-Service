@@ -1,0 +1,35 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout репозитория
+        uses: actions/checkout@v3
+
+      - name: Логин в DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Билд Docker-образа
+        run: |
+          docker build -t myapp:latest .
+          docker tag myapp:latest mydockerhub/myapp:latest
+          docker push mydockerhub/myapp:latest
+
+      - name: Деплой на сервер
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/myapp
+            docker pull mydockerhub/myapp:latest
+            docker-compose down
+            docker-compose up -d
