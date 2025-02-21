@@ -44,6 +44,7 @@ jobs:
       - name: Run migrations
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
           python manage.py makemigrations
           python manage.py migrate
