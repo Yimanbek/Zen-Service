@@ -16,10 +16,9 @@ jobs:
       - name: Логин в DockerHub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Билд Docker-образа
+      - name: Билд и пуш Docker-образа
         run: |
-          docker build -t myapp:latest .
-          docker tag myapp:latest mydockerhub/myapp:latest
+          docker build -t mydockerhub/myapp:latest .
           docker push mydockerhub/myapp:latest
 
       - name: Деплой на сервер
@@ -30,6 +29,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/myapp
-            docker pull mydockerhub/myapp:latest
             docker-compose down
-            docker-compose up -d
+            docker-compose pull
+            docker-compose up -d --build
+            docker system prune -f
