@@ -35,14 +35,9 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo 
+            mkdir -p /home/myapp  # Создать папку, если её нет
             cd /home/myapp || exit 1
-            echo 
             docker-compose -f docker-compose.prod.yaml down
-            echo
             docker-compose -f docker-compose.prod.yaml pull
-            echo 
             docker-compose -f docker-compose.prod.yaml up -d --build
-            echo 
             docker system prune -f
-            echo 
