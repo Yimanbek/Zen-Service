@@ -3,7 +3,7 @@ name: CI Tests
 on:
   push:
     branches:
-      -  develop
+      - develop
 
 jobs:
   test:
@@ -13,28 +13,42 @@ jobs:
       postgres:
         image: postgres:14
         env:
-          POSTGRES_USER: ${USER}
-          POSTGRES_PASSWORD: ${PASSWORD}
-          POSTGRES_DB: ${TEST_DB_NAME}
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      steps:
-        - name: Checkout repo
-          uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
 
-        - name: Setup Python
-          uses: actions/setup-python@v3
-          with:
-            python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-django
 
-        - name: Install dependencies
-          run: |
-            pip install -r requirements.txt
-            pip install pytest pytest-django
-        
-        - name: Run tests
-          env:
-            DATABASE_URL: ${TEST_DATABASE_URL}
-          run: pytest
+      - name: Wait for PostgreSQL to start
+        run: |
+          echo "Waiting for PostgreSQL..."
+          until pg_isready -h localhost -p 5432 -U test_user; do
+            sleep 1
+          done
+          echo "PostgreSQL is ready!"
 
-        - name: Stopping test-db
-          run: docker-compose down test-db
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+        run: |
+          python manage.py makemigrations
+          python manage.py migrate
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+        run: pytest
