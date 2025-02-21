@@ -18,7 +18,7 @@ jobs:
 
       - name: Билд и пуш Docker-образа
         run: |
-          docker build -t mydockerhub/myapp:latest .
+          docker build -t mydockerhub/myapp:latest -f docker/dockerfile.prod .
           docker push mydockerhub/myapp:latest
 
       - name: Деплой на сервер
