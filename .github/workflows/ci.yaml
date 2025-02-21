@@ -45,7 +45,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          BOT_USERNAME: ${{ secrets.BOT_USERNAME }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
           python manage.py makemigrations
           python manage.py migrate
@@ -54,5 +54,6 @@ jobs:
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          BOT_USERNAME: ${{ secrets.BOT_USERNAME }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: pytest
+
