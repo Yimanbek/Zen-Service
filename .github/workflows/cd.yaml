@@ -10,16 +10,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout репозитория
+      - name: Клонирование репозитория
         uses: actions/checkout@v3
+
+      - name: Настройка SSH-доступа
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
       - name: Логин в DockerHub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Билд и пуш Docker-образа
+      - name: Сборка и пуш Docker-образа
         run: |
-          docker build -t yimanbek/myapp:latest -f docker/dockerfile.prod .
-          docker push yimanbek/myapp:latest
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/myapp:latest -f docker/dockerfile.prod .
+          docker push ${{ secrets.DOCKER_USERNAME }}/myapp:latest
 
       - name: Деплой на сервер
         uses: appleboy/ssh-action@v0.1.6
@@ -28,8 +35,14 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/myapp
+            echo 
+            cd /home/myapp || exit 1
+            echo 
             docker-compose -f docker-compose.prod.yaml down
+            echo
             docker-compose -f docker-compose.prod.yaml pull
+            echo 
             docker-compose -f docker-compose.prod.yaml up -d --build
+            echo 
             docker system prune -f
+            echo 
